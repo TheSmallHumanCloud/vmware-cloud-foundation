@@ -1,7 +1,7 @@
 function Get-vSANSPSummary {
     <#
     .SYNOPSIS
-        Export vSAN Storage Policies Information.
+        Export vSAN Storage Policy Information.
     .DESCRIPTION
         Export vSAN Storage Policies from vCenter showing FTT & Stripe information and amount of amount of VM's using each.
     .PARAMETER ExportPath
@@ -20,7 +20,7 @@ function Get-vSANSPSummary {
     [CmdletBinding()]
     param (        
         [Parameter(Mandatory)]
-        [string] $ExportPath)
+        [string] $ExportFilePath)
 
     Begin {}
 
@@ -31,12 +31,10 @@ function Get-vSANSPSummary {
             $SPBM = $vSANstoragepolicies | Select-Object Name, AnyOfRuleSets
             ForEach ($SP in $SPBM) {
                 $Attributes = @( $SP | ForEach-Object { $_.AnyOfRuleSets } | Select-Object -ExpandProperty AllofRules)
-                $ObjectCount
-                $VMCount = (Get-SpbmEntityConfiguration -StoragePolicy "$($SP.name)").count
                 $object = [PSCustomObject]@{
                     SPName         = $SP.Name
-                    ObjectCount    = $VMCount
-                    VMCount        = $VMCount | Where-Object {$_.}
+                    ObjectCount    = $ObjectCount = (Get-SpbmEntityConfiguration -StoragePolicy "$($SP.name)").count
+                    VMCount        = $VMCount = (Get-SpbmEntityConfiguration -StoragePolicy "$($SP.Name)" | Where-Object {$_.Entity -notlike "hard*"}).count
                     RAID           = $attributes | Where-Object { $_.Capability -like "*VSAN.replicaPreference*" } | Select-Object -ExpandProperty Value
                     FTT            = $attributes | Where-Object { $_.Capability -like "*VSAN.hostFailuresToTolerate*" } | Select-Object -ExpandProperty Value
                     SubFTT         = $attributes | Where-Object { $_.Capability -like "*VSAN.subFailuresToTolerate*" } | Select-Object -ExpandProperty Value
@@ -49,7 +47,7 @@ function Get-vSANSPSummary {
                 $Output += $object
 
             }
-            $Output | ConvertTo-Html -Property SPName, VMCount, RAID, FTT, SubFTT, Stripes, ForceProvision, StorageType, IOPSLimit | Out-File $ExportPath
+            $Output | ConvertTo-Html -Property SPName, VMCount, ObjectCount, RAID, FTT, SubFTT, Stripes, ForceProvision, StorageType, IOPSLimit | Out-File $ExportFilePath
         }
         catch {
             Write-Host "An error occurred!" -ForegroundColor Red
