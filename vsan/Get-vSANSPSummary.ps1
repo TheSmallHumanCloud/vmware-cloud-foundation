@@ -17,6 +17,7 @@ function Get-vSANSPSummary {
         Outputs a HTML file containing the Storage Policy Information for vSAN Storage Policies to a specified location.
 
 #>
+#Requires -Modules VMware.VimAutomation.Storage
     [CmdletBinding()]
     param (        
         [Parameter(Mandatory)]
