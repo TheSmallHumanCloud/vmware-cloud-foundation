@@ -2,4 +2,5 @@
 
 This repository contains code and information related to blog posts for VMware Cloud Foundation (VCF) published on stephanmctighe.com.
 
-> Note : Test everything before you use it...
+> [!IMPORTANT]
+> Test everything before you use it!
