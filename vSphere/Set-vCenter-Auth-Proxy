@@ -1,0 +1,58 @@
+$vcenter_username = "<Username>"
+$vcenter_password = "<Password>"
+$domain_username = "<Username>" # sAM account name only
+$domain_password = "<Password>"
+$Domain = "<domain fqdn>"
+
+$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $vcenter_username,$vcenter_password)))
+
+# Get Authentication Token
+$Splat = @{
+    "URI"     = "https://vcsa-01.tsh.cloud/api/session"
+    "Headers" = @{
+        'Content-Type' = "application/json"
+        'Accept'       = "application/json"
+        'Authorization' = "Basic $base64AuthInfo"
+    }
+    "Method"  = "POST"
+    "body"    = @{
+
+    } | ConvertTo-JSON -Depth 6
+}
+$vCenter_token = Invoke-RestMethod @Splat -SkipCertificateCheck
+
+# Configure vCenter Authentication Proxy Domain Configuration
+$Splat = @{
+    "URI"     = "https://vcsa-01.tsh.cloud/api/vcenter/vmcam/domain/"
+    "Headers" = @{
+        'Content-Type'  = "application/json"
+        'Accept'        = "application/json"
+        'vmware-api-session-id' = "$vCenter_token"
+    }
+    "Method"  = "POST"
+    "body"    = @{
+        domain_info = @{
+            domain_name = "$Domain"
+            user_name = "$domain_username"
+        }
+        password = "$domain_password"
+    } | ConvertTo-JSON -Depth 6
+}
+Invoke-RestMethod @Splat -SkipCertificateCheck
+
+# Delete vCenter Authentication Proxy Domain Configuration
+$Splat = @{
+    "URI"     = "https://vcsa-01.tsh.cloud/api/vcenter/vmcam/domain/$Domain"
+    "Headers" = @{
+        'Content-Type'  = "application/json"
+        'Accept'        = "application/json"
+        'vmware-api-session-id' = "$vCenter_token"
+    }
+    "Method"  = "DELETE"
+    "body"    = @{
+
+    } | ConvertTo-JSON -Depth 6
+}
+Invoke-RestMethod @Splat -SkipCertificateCheck
+
+
